@@ -96,6 +96,7 @@ echo "c) Add text to a video"
 echo "d) Reverse a video"
 echo "e) Mix new audio into a video (does not replace existing sounds)"
 echo "f) Mute a video (removes all sound)"
+echo "g) Create a gif from a video"
 
 fn_convert() {
     local extension
@@ -344,6 +345,33 @@ fn_mute() {
     fn_log_created_if_successful "$outfilepath/new $outfilename"
 }
 
+fn_gif() {
+    local fps 
+    local scale
+    local loopcount
+
+    echo "Type the desired FPS (leave empty to default to ${cyan}30${white})."
+    fn_ask_for_input fps
+    echo "Type a scale (${cyan}width${white}x${cyan}height${white}, for example ${cyan}720x480${white})."
+    echo "Can type ${cyan}-1${white} to keep aspect ratio, for example ${cyan}720x-1${white} or ${cyan}-1x480${white}."
+    fn_ask_for_input scale
+    echo "Type the amount of times the gif should loop (type ${cyan}-1${white} for no looping; type ${cyan}0${white} or leave empty for infinite looping)."
+    fn_ask_for_input loopcount
+
+    #set defaults
+    if [ "$fps" == "" ]; then fps="30"; fi
+    if [ "$loopcount" == "" ]; then loopcount="0"; fi
+
+    #replace x with :
+    scale=${scale//x/:}
+
+    #split filename string by .
+    IFS="." read -ra filesegments <<< "$filename"
+
+    "$FFMPEG" -i "$file" -vf "fps=$fps,scale=$scale:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop $loopcount "$outfilepath/new ${filesegments[0]}.gif"
+    fn_log_created_if_successful "$outfilepath/new ${filesegments[0]}.gif"
+}
+
 fn_menu() {
     local option
 
@@ -366,6 +394,7 @@ fn_menu() {
         d | D) fn_reverse ;;
         e | E) fn_mix ;;
         f | F) fn_mute ;;
+        g | G) fn_gif ;;
         *)
             echo "Unknown option ${red}'$option'${white}, please retry."
             errorflag=1
