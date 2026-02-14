@@ -84,7 +84,7 @@ echo
 echo "1) Convert a file (example: mov -> mp4)"
 echo "2) Compress a file (compression level of 8-10 is usually good)"
 echo "3) Cut the start and/or end of a file (example: start at 5 seconds)"
-echo "4) Combine an image and a sound file to create a video"
+echo "4) Combine an image and a sound file to create a video (can be a gif!)"
 echo "5) Loop contents of a file (up to a declared filesize)"
 echo "6) Replace the sound in a video"
 echo "7) Crop a video"
@@ -151,15 +151,24 @@ fn_cut() {
 fn_img() {
     local imagefile
 	local filesegments
+    local imagesegments
 
     echo "Drag the image to this window."
     fn_ask_for_input imagefile
 	
 	#split filename string by .
     IFS="." read -ra filesegments <<< "$filename"
+    IFS="." read -ra imagesegments <<< "$imagefile"
 
-    "$FFMPEG" -loop 1 -i "$imagefile" -i "$file" -c:v libx264 -tune stillimage -c:a aac -b:a 192k \
-            -pix_fmt yuv420p -shortest "$outfilepath/new ${filesegments[0]}.mp4"
+    if [ "${imagesegments[-1]}" == "gif" ]; then
+        "$FFMPEG" -stream_loop -1 -i "$imagefile" -i "$file" -shortest -c:v libx264 -crf 26 \
+                -c:a aac -q:a 4 -filter:v "scale=w=trunc(iw/2)*2:h=trunc(ih/2)*2" \
+                -fflags +shortest -max_interleave_delta 10M "$outfilepath/new ${filesegments[0]}.mp4"
+    else
+        "$FFMPEG" -loop 1 -i "$imagefile" -i "$file" -c:v libx264 -tune stillimage -c:a aac -b:a 192k \
+                -pix_fmt yuv420p -filter:v "scale=w=trunc(iw/2)*2:h=trunc(ih/2)*2" -shortest \
+                -fflags +shortest -max_interleave_delta 10M "$outfilepath/new ${filesegments[0]}.mp4"
+    fi
     fn_log_created_if_successful "$outfilepath/new ${filesegments[0]}.mp4"
 }
 

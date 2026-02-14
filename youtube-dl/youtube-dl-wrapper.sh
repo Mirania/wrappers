@@ -77,6 +77,12 @@ fn_video() {
     fi
 }
 
+fn_video_m3u_playlist() {
+    cd "$OUTDIR"
+
+    "$YOUTUBEDL" -o video.mp4 --merge-output-format mp4 "$url"
+}
+
 fn_audio() {
     local quality
 
@@ -103,7 +109,8 @@ fn_menu() {
         1) fn_video ;;
         2) fn_video "--embed-subs" ;;
         3) fn_video "--write-subs" ;;
-        4) fn_audio ;;
+        4) fn_video_m3u_playlist ;;
+        5) fn_audio ;;
         *)
             echo "Unknown option ${red}'$option'${white}, please retry."
             errorflag=1
@@ -111,7 +118,8 @@ fn_menu() {
     esac
 }
 
-echo "Please paste the ${green}URL${white} of the video. Should start with ${green}https://${white}."
+echo "Please paste the ${green}URL${white} of the video/m3u/m3u8. Should start with ${green}https://${white}."
+echo "To get a m3u/m3u8 URL, you may need to check the network tab in the browser and find the GET request of the playlist."
 #do-while loop
 fn_ask_for_input url
 while [ "$url" == "" ]; do
@@ -123,7 +131,8 @@ echo
 echo "1) Download video"
 echo "2) Download video with embedded subs"
 echo "3) Download video and create a subtitle file (.vtt)"
-echo "4) Download audio"
+echo "4) Download video from a m3u/m3u8 playlist"
+echo "5) Download audio"
 
 #do-while loop
 fn_menu
