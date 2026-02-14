@@ -4,6 +4,8 @@ A collection of wrapper scripts for CLI utilities. These simplify the common use
 
 * Install [Git Bash for Windows](https://git-scm.com/downloads)
 
+* Download the required program that you're wrapping (e.g. ffmpeg) and place them in a `bin/` folder. The runner scripts should be placed there as well.
+
 ## Wrappers
 
 Application|Purpose
